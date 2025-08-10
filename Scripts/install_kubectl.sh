@@ -20,3 +20,16 @@ echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
 echo "Validating the kubectl binary against the checksum file completed"
 echo "##################################################################################"
 
+
+echo "Installing kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+echo "Installation completed"
+echo "##################################################################################"
+
+echo "Adding permission"
+chmod +x kubectl
+mkdir -p ~/.local/bin
+mv ./kubectl ~/.local/bin/kubectl
+echo "##################################################################################"
+
+kubectl version --client
