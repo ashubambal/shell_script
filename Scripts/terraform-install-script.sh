@@ -1,42 +1,60 @@
-echo "Updating Ubuntu System"
-sudo apt update -y
-echo "Syetem has been updated"
-echo "###############################################################################"
 #!/bin/bash
+set -e  # Exit on error
 
-echo "Updating Ubuntu System"
-sudo apt update -y
-echo "Syetem has been updated"
+# --- Self-fix Windows CRLF issue ---
+# If file contains CRLF, remove CR
+if grep -q $'\r' "$0"; then
+    echo "🔄 Fixing Windows CRLF line endings..."
+    sed -i 's/\r$//' "$0"
+    echo "✅ Fixed line endings. Please re-run the script."
+    exit 0
+fi
+
+# Detect if sudo is needed
+if [ "$(id -u)" -ne 0 ]; then
+    SUDO="sudo"
+else
+    SUDO=""
+fi
+
+echo "🚀 Updating Ubuntu System..."
+$SUDO apt update -y
+echo "✅ System has been updated"
 echo "###############################################################################"
 
-echo "GPG signature and install packages"
-sudo apt-get install -y gnupg software-properties-common
-echo "Completed GPG signature and install packages"
+echo "📦 Installing GPG and required packages..."
+$SUDO apt-get install -y wget gnupg software-properties-common
+echo "✅ GPG and dependencies installed"
 echo "###############################################################################"
 
-echo "Install HashiCorp's GPG key"
+echo "🔑 Installing HashiCorp's GPG key..."
 wget -O- https://apt.releases.hashicorp.com/gpg | \
 gpg --dearmor | \
-sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
-echo "Completed Install HashiCorp's GPG key"
+$SUDO tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+echo "✅ GPG key installed"
 echo "###############################################################################"
 
-echo "Verify the GPG key's fingerprint"
+echo "🔍 Verifying the GPG key's fingerprint..."
 gpg --no-default-keyring \
 --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
 --fingerprint
-echo "Verified the GPG key's fingerprint"
+echo "✅ GPG key fingerprint verified"
 echo "###############################################################################"
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+echo "📝 Adding HashiCorp repository..."
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" \
+| $SUDO tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
 
-echo "Updating Ubuntu System"
-sudo apt update -y
-echo "Syetem has been updated"
+echo "🔄 Updating package list..."
+$SUDO apt update -y
+echo "✅ Package list updated"
 echo "###############################################################################"
 
-echo "Installing Terrform"
-sudo apt install terraform
-echo "Terrafrom installation completed"
+echo "⚙️ Installing Terraform..."
+$SUDO apt install -y terraform
+echo "✅ Terraform installation completed"
 echo "###############################################################################"
+
+terraform -version
 
